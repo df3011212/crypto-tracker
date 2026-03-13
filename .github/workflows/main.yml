@@ -1,0 +1,27 @@
+name: Update Coin List
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 每 6 小時跑一次
+  workflow_dispatch:      # 也可以手動點擊執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install requests pandas
+      - name: Run script
+        run: python update_coins.py
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add index.html hot_symbols.txt
+          git commit -m "Update list" || exit 0
+          git push
