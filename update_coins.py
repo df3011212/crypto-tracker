@@ -13,13 +13,12 @@ def get_data():
         data = response.json()
         coin_list = data['data']['cryptoCurrencyList']
         
-        # 定義穩定幣與錨定幣過濾清單
         stable_keywords = ['USDT', 'USDC', 'FDUSD', 'EURC', 'RLUSD', 'USD1', 'PAXG', 'XAUt', 'DAI', 'PYUSD', 'TUSD', 'USTC', 'BUSD']
         results = []
 
         for coin in coin_list:
             symbol = coin['symbol']
-            # 過濾穩定幣
+            slug = coin['slug'] # 這是網址所需的名稱，例如 pepe
             if any(stable in symbol for stable in stable_keywords): continue
 
             quotes = coin['quotes'][0]
@@ -28,10 +27,10 @@ def get_data():
             
             if mkt_cap > 0:
                 ratio = (vol_24h / mkt_cap) * 100
-                # 篩選標準：Vol/Mkt Cap ≧ 10%
                 if ratio >= 10:
                     results.append({
                         "代號": symbol,
+                        "網址名": slug, # 用於生成連結
                         "價格": f"${quotes.get('price', 0):.4f}",
                         "24h漲跌": f"{quotes.get('percentChange24h', 0):.2f}%",
                         "Vol/Mkt Cap": f"{ratio:.2f}%"
@@ -41,20 +40,33 @@ def get_data():
         print(f"抓取錯誤: {e}")
         return pd.DataFrame()
 
-# 執行抓取
 df = get_data()
-
-# 設定台灣時間
 tw_tz = pytz.timezone('Asia/Taipei')
 current_time = datetime.now(tw_tz).strftime("%Y-%m-%d %H:%M:%S")
 
-# 1. 生成 TXT 下載檔 (僅含代號與比例)
+# 1. 生成 TXT 下載檔
 if not df.empty:
     df[['代號', 'Vol/Mkt Cap']].to_csv('hot_symbols.txt', index=False, sep='\t')
 else:
     with open("hot_symbols.txt", "w") as f: f.write("目前無符合標準的幣種")
 
 # 2. 生成 HTML 網頁
+rows_html = ""
+if not df.empty:
+    for _, row in df.iterrows():
+        # 動態生成 CoinMarketCap 連結
+        cmc_url = f"https://coinmarketcap.com/zh-tw/currencies/{row['網址名']}/"
+        rows_html += f"""
+        <tr>
+            <td><a href="{cmc_url}" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">{row['代號']} 🔗</a></td>
+            <td>{row['價格']}</td>
+            <td>{row['24h漲跌']}</td>
+            <td class="ratio-high">{row['Vol/Mkt Cap']}</td>
+        </tr>
+        """
+else:
+    rows_html = "<tr><td colspan='4' class='text-center'>目前無符合標準之幣種</td></tr>"
+
 html_template = f"""
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -64,16 +76,14 @@ html_template = f"""
     <title>CoinMarketCap 放量偵測器</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body {{ background-color: #0f172a; color: #f8fafc; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+        body {{ background-color: #0f172a; color: #f8fafc; padding: 20px; font-family: -apple-system, sans-serif; }}
         .container {{ max-width: 900px; }}
-        .card {{ background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }}
-        .table {{ color: #e2e8f0; background: #1e293b; border-radius: 8px; overflow: hidden; }}
+        .card {{ background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 20px; }}
+        .table {{ color: #e2e8f0; background: #1e293b; }}
         .ratio-high {{ color: #4ade80; font-weight: bold; }}
         .header-title {{ color: #38bdf8; font-weight: 800; }}
         .badge-update {{ background-color: #334155; color: #94a3b8; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; }}
-        .rules-text {{ font-size: 0.95rem; color: #cbd5e1; line-height: 1.6; }}
         .btn-download {{ background-color: #38bdf8; color: #0f172a; font-weight: bold; border: none; }}
-        .btn-download:hover {{ background-color: #0ea5e9; color: white; }}
     </style>
 </head>
 <body>
@@ -85,12 +95,11 @@ html_template = f"""
 
         <div class="card">
             <h5 class="text-info">📌 偵測規則說明</h5>
-            <div class="rules-text">
+            <div style="font-size: 0.95rem; color: #cbd5e1;">
                 <ul>
-                    <li><strong>更新頻率：</strong> 每 <strong>30 分鐘</strong> 自動重新抓取數據。</li>
-                    <li><strong>篩選範圍：</strong> CoinMarketCap 市值前 <strong>200 名</strong> 幣種。</li>
-                    <li><strong>過濾機制：</strong> 已自動剔除穩定幣及法定貨幣錨定幣。</li>
-                    <li><strong>放量標準：</strong> Vol/Mkt Cap (24h) <strong>≧ 10%</strong> 代表資金流入活躍。</li>
+                    <li><strong>更新頻率：</strong> 每 30 分鐘自動更新。</li>
+                    <li><strong>放量標準：</strong> Vol/Mkt Cap ≧ 10% (資金流入活躍)。</li>
+                    <li><strong>操作提示：</strong> 點擊<strong>代號</strong>可直接跳轉至 CMC 詳情頁面。</li>
                 </ul>
             </div>
             <a href="hot_symbols.txt" download class="btn btn-download w-100 mt-2">📥 下載代號清單 (TXT)</a>
@@ -100,19 +109,18 @@ html_template = f"""
             <table class="table table-dark table-hover">
                 <thead>
                     <tr class="table-active">
-                        <th>代號</th>
+                        <th>代號 (點擊看圖)</th>
                         <th>價格</th>
                         <th>24h 漲跌</th>
                         <th>Vol/Mkt Cap</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {''.join([f"<tr><td><strong>{row['代號']}</strong></td><td>{row['價格']}</td><td>{row['24h漲跌']}</td><td class='ratio-high'>{row['Vol/Mkt Cap']}</td></tr>" for _, row in df.iterrows()]) if not df.empty else "<tr><td colspan='4' class='text-center'>目前無符合標準之幣種</td></tr>"}
+                    {rows_html}
                 </tbody>
             </table>
         </div>
-        
-        <p class="text-center text-secondary mt-4" style="font-size: 0.8rem;">本工具僅供策略參考，不構成任何投資建議。</p>
+        <p class="text-center text-secondary mt-4" style="font-size: 0.8rem;">本工具僅供策略參考，不構成投資建議。</p>
     </div>
 </body>
 </html>
