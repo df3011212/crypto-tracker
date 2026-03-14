@@ -63,6 +63,7 @@ def generate_rows(target_df):
         """
     return html
 
+# 注意：下方的 JavaScript 大括號已全部改為 {{}} 以符合 Python 語法
 html_template = f"""
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -75,16 +76,12 @@ html_template = f"""
         body {{ background-color: #0f172a; color: #f8fafc; padding: 20px; font-family: sans-serif; scroll-behavior: smooth; }}
         .container {{ max-width: 1000px; }}
         .card {{ background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 30px; }}
-        /* 修正文字看不見的問題 */
         .info-text {{ color: #cbd5e1 !important; font-size: 0.95rem; }}
         .header-title {{ color: #38bdf8; font-weight: 800; }}
         .badge-update {{ background-color: #334155; color: #94a3b8; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; }}
-        /* 導航按鈕樣式 */
-        .nav-btn {{ border-radius: 10px; font-weight: bold; margin: 5px; border: none; padding: 10px 20px; transition: 0.3s; }}
+        .nav-btn {{ border-radius: 10px; font-weight: bold; margin: 5px; border: none; padding: 10px 20px; transition: 0.3s; text-decoration: none; display: inline-block; }}
         .nav-btn-long {{ background-color: #065f46; color: #4ade80; }}
-        .nav-btn-long:hover {{ background-color: #059669; color: white; }}
         .nav-btn-short {{ background-color: #7f1d1d; color: #f87171; }}
-        .nav-btn-short:hover {{ background-color: #b91c1c; color: white; }}
         th {{ cursor: pointer; color: #38bdf8 !important; text-align: center; white-space: nowrap; }}
         td {{ text-align: center; vertical-align: middle; border-bottom: 1px solid #334155 !important; }}
         .section-label {{ font-size: 1.25rem; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 5px solid #38bdf8; }}
@@ -100,15 +97,15 @@ html_template = f"""
         </div>
 
         <div class="mb-4">
-            <a href="#long-section" class="btn nav-btn nav-btn-long">🚀 資金流入區</a>
-            <a href="#short-section" class="btn nav-btn nav-btn-short">📉 資金流出區</a>
+            <a href="#long-section" class="nav-btn nav-btn-long">🚀 資金流入區</a>
+            <a href="#short-section" class="nav-btn nav-btn-short">📉 資金流出區</a>
         </div>
 
         <div class="card p-3 mb-4">
             <div class="info-text text-start">
                 <p class="mb-2">💡 <strong>偵測規則：</strong> 篩選市值前 200 名，Vol/Mkt Cap ≧ 10% 之幣種。</p>
                 <div class="d-flex gap-3">
-                    <span><strong style="color: #4ade80;">● 入流：</strong> 放量且價格上漲</span>
+                    <span><strong style="color: #4ade80;">● 流入：</strong> 放量且價格上漲</span>
                     <span><strong style="color: #f87171;">● 流出：</strong> 放量且價格下跌</span>
                 </div>
             </div>
@@ -184,3 +181,7 @@ html_template = f"""
     </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_template)
