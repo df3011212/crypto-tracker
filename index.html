@@ -4,627 +4,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoinMarketCap 放量偵測器</title>
+    <title>CoinMarketCap 多空動向偵測器</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; font-family: sans-serif; }
-        .container { max-width: 900px; }
-        .card { background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .table { color: #e2e8f0; background: #1e293b; }
-        .ratio-high { color: #4ade80; font-weight: bold; }
-        th { cursor: pointer; color: #38bdf8 !important; }
-        th:hover { text-decoration: underline; }
+        .container { max-width: 1000px; }
+        .card { background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
         .header-title { color: #38bdf8; font-weight: 800; }
-        .badge-update { background-color: #334155; color: #94a3b8; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .badge-update { background-color: #334155; color: #94a3b8; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; }
+        th { cursor: pointer; color: #38bdf8 !important; text-align: center; }
+        td { text-align: center; vertical-align: middle; border-bottom: 1px solid #334155 !important; }
+        .table { margin-bottom: 0; }
+        .section-label { font-size: 1.25rem; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 5px solid #38bdf8; }
+        .label-inflow { border-left-color: #4ade80; color: #4ade80; }
+        .label-outflow { border-left-color: #f87171; color: #f87171; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="text-center mb-4">
-            <h1 class="header-title">📊 CoinMarketCap 放量偵測器</h1>
-            <span class="badge-update">🕒 最後更新 (台灣)：2026-03-14 11:25:53</span>
+            <h1 class="header-title">📊 CMC 多空資金動向偵測</h1>
+            <span class="badge-update">🕒 最後更新 (台灣)：2026-03-14 11:46:34</span>
         </div>
 
-        <div class="card">
-            <h5 class="text-info">📌 偵測與排序規則</h5>
-            <div style="font-size: 0.95rem; color: #cbd5e1;">
-                <ul>
-                    <li><strong>更新頻率：</strong> 每 30 分鐘更新。</li>
-                    <li><strong>排序功能：</strong> 點擊下方表格<strong>藍色標題</strong>即可切換排序方式。</li>
-                    <li><strong>放量標準：</strong> Vol/Mkt Cap ≧ 10%。</li>
-                </ul>
-            </div>
-            <a href="hot_symbols.txt" download class="btn btn-info w-100 mt-2" style="font-weight:bold;">📥 下載代號清單 (TXT)</a>
+        <div class="card p-3" style="font-size: 0.9rem;">
+            <p class="mb-1">💡 <strong>偵測規則：</strong> 篩選 CMC 前 200 名，Vol/Mkt Cap ≧ 10% 之幣種。</p>
+            <p class="mb-0">🟢 <strong>流入：</strong> 放量且價格上漲。 🔴 <strong>流出：</strong> 放量且價格下跌。</p>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-dark table-hover" id="coinTable">
-                <thead>
-                    <tr class="table-active">
-                        <th onclick="sortTable(0)">代號 ⇅</th>
-                        <th onclick="sortTable(1)">價格 ⇅</th>
-                        <th onclick="sortTable(2)">24h 漲跌 ⇅</th>
-                        <th onclick="sortTable(3)">Vol/Mkt Cap ⇅</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/ethereum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ETH 🔗</a></td>
-            <td data-sort="2096.5311035317586">$2096.5311</td>
-            <td data-sort="-0.65970427" style="color: #f87171;">-0.66%</td>
-            <td data-sort="10.114039767060737" class="ratio-high">10.11%</td>
-        </tr>
-        
+        <div class="section-label label-inflow">🚀 資金流入 (放量上漲 - 多頭預警)</div>
+        <div class="card overflow-hidden p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" id="inflowTable">
+                    <thead>
+                        <tr class="table-active">
+                            <th onclick="sortTable('inflowTable', 0)">代號 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 1)">價格 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 2)">24h 漲跌 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 3)">Vol/Mkt Cap ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/dogecoin/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">DOGE 🔗</a></td>
-            <td data-sort="0.09590784063489667">$0.0959</td>
-            <td data-sort="-0.40470932" style="color: #f87171;">-0.40%</td>
-            <td data-sort="11.659967731383727" class="ratio-high">11.66%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/chainlink/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LINK 🔗</a></td>
-            <td data-sort="9.1039182819251">$9.1039</td>
-            <td data-sort="-1.49026043" style="color: #f87171;">-1.49%</td>
-            <td data-sort="12.211657894876158" class="ratio-high">12.21%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sui/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SUI 🔗</a></td>
-            <td data-sort="0.9948097908900223">$0.9948</td>
-            <td data-sort="-2.37631394" style="color: #f87171;">-2.38%</td>
-            <td data-sort="17.63371778482527" class="ratio-high">17.63%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zcash/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZEC 🔗</a></td>
-            <td data-sort="209.71724998891102">$209.7172</td>
-            <td data-sort="-1.55363007" style="color: #f87171;">-1.55%</td>
-            <td data-sort="10.79297696771751" class="ratio-high">10.79%</td>
+            <td data-sort="0.0961719068297205">$0.0962</td>
+            <td data-sort="0.0707397" style="color: #4ade80;">0.07%</td>
+            <td data-sort="12.844364936414546" style="color: #4ade80; font-weight: bold;">12.84%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/bittensor/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">TAO 🔗</a></td>
-            <td data-sort="244.4284104004408">$244.4284</td>
-            <td data-sort="5.99994822" style="color: #4ade80;">6.00%</td>
-            <td data-sort="17.18478659811526" class="ratio-high">17.18%</td>
+            <td data-sort="246.25306604487898">$246.2531</td>
+            <td data-sort="6.67524624" style="color: #4ade80;">6.68%</td>
+            <td data-sort="17.066241790941827" style="color: #4ade80; font-weight: bold;">17.07%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/uniswap/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">UNI 🔗</a></td>
-            <td data-sort="4.00983186596401">$4.0098</td>
-            <td data-sort="-0.01272139" style="color: #f87171;">-0.01%</td>
-            <td data-sort="11.382809328529905" class="ratio-high">11.38%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/aave/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">AAVE 🔗</a></td>
-            <td data-sort="112.55615861906888">$112.5562</td>
-            <td data-sort="-1.93112946" style="color: #f87171;">-1.93%</td>
-            <td data-sort="26.017973437205356" class="ratio-high">26.02%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/near-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">NEAR 🔗</a></td>
-            <td data-sort="1.3330776699707134">$1.3331</td>
-            <td data-sort="-3.6933374" style="color: #f87171;">-3.69%</td>
-            <td data-sort="15.850551427215361" class="ratio-high">15.85%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pepe/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PEPE 🔗</a></td>
-            <td data-sort="3.4142833573888387e-06">$0.0000</td>
-            <td data-sort="-0.86699879" style="color: #f87171;">-0.87%</td>
-            <td data-sort="36.42073407681327" class="ratio-high">36.42%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/worldcoin-org/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">WLD 🔗</a></td>
-            <td data-sort="0.35949565623946766">$0.3595</td>
-            <td data-sort="-1.97747206" style="color: #f87171;">-1.98%</td>
-            <td data-sort="13.97326502154495" class="ratio-high">13.97%</td>
+            <td data-sort="4.011960498700354">$4.0120</td>
+            <td data-sort="0.20847216" style="color: #4ade80;">0.21%</td>
+            <td data-sort="11.32451218515092" style="color: #4ade80; font-weight: bold;">11.32%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/official-trump/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">TRUMP 🔗</a></td>
-            <td data-sort="4.176496275688678">$4.1765</td>
-            <td data-sort="40.38973202" style="color: #4ade80;">40.39%</td>
-            <td data-sort="188.59165237678098" class="ratio-high">188.59%</td>
+            <td data-sort="4.2509621741398">$4.2510</td>
+            <td data-sort="41.61560287" style="color: #4ade80;">41.62%</td>
+            <td data-sort="187.90786967865566" style="color: #4ade80; font-weight: bold;">187.91%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/render/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">RENDER 🔗</a></td>
-            <td data-sort="1.8396032498261636">$1.8396</td>
-            <td data-sort="4.97463573" style="color: #4ade80;">4.97%</td>
-            <td data-sort="24.26521689092169" class="ratio-high">24.27%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/ethena/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ENA 🔗</a></td>
-            <td data-sort="0.10899666259150716">$0.1090</td>
-            <td data-sort="-1.35658816" style="color: #f87171;">-1.36%</td>
-            <td data-sort="12.750798365100675" class="ratio-high">12.75%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/midnight-network/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">NIGHT 🔗</a></td>
-            <td data-sort="0.04963375744183895">$0.0496</td>
-            <td data-sort="-4.82286733" style="color: #f87171;">-4.82%</td>
-            <td data-sort="21.566878228657608" class="ratio-high">21.57%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/aptos/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">APT 🔗</a></td>
-            <td data-sort="0.928028290756903">$0.9280</td>
-            <td data-sort="-1.51166915" style="color: #f87171;">-1.51%</td>
-            <td data-sort="14.911592811353373" class="ratio-high">14.91%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/filecoin/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FIL 🔗</a></td>
-            <td data-sort="0.8744970730835844">$0.8745</td>
-            <td data-sort="-2.08125625" style="color: #f87171;">-2.08%</td>
-            <td data-sort="16.436794175939117" class="ratio-high">16.44%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pump-fun/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PUMP 🔗</a></td>
-            <td data-sort="0.001994527341410916">$0.0020</td>
-            <td data-sort="-8.38572695" style="color: #f87171;">-8.39%</td>
-            <td data-sort="18.391006661387173" class="ratio-high">18.39%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/arbitrum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ARB 🔗</a></td>
-            <td data-sort="0.10278883508769215">$0.1028</td>
-            <td data-sort="-0.75725375" style="color: #f87171;">-0.76%</td>
-            <td data-sort="14.024030703148279" class="ratio-high">14.02%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/bonk1/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BONK 🔗</a></td>
-            <td data-sort="6.193497552511768e-06">$0.0000</td>
-            <td data-sort="-0.7836569" style="color: #f87171;">-0.78%</td>
-            <td data-sort="17.739879917186908" class="ratio-high">17.74%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/virtual-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">VIRTUAL 🔗</a></td>
-            <td data-sort="0.7291595945145027">$0.7292</td>
-            <td data-sort="-2.17619727" style="color: #f87171;">-2.18%</td>
-            <td data-sort="23.573888816701846" class="ratio-high">23.57%</td>
+            <td data-sort="1.8366295659035643">$1.8366</td>
+            <td data-sort="4.89126462" style="color: #4ade80;">4.89%</td>
+            <td data-sort="24.444804282140982" style="color: #4ade80; font-weight: bold;">24.44%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/pudgy-penguins/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PENGU 🔗</a></td>
-            <td data-sort="0.00738501765443664">$0.0074</td>
-            <td data-sort="-0.25344281" style="color: #f87171;">-0.25%</td>
-            <td data-sort="27.592830609517417" class="ratio-high">27.59%</td>
+            <td data-sort="0.007372476253623051">$0.0074</td>
+            <td data-sort="0.08887322" style="color: #4ade80;">0.09%</td>
+            <td data-sort="27.554988682086773" style="color: #4ade80; font-weight: bold;">27.55%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/sei/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SEI 🔗</a></td>
-            <td data-sort="0.06649522814524264">$0.0665</td>
-            <td data-sort="1.06726327" style="color: #4ade80;">1.07%</td>
-            <td data-sort="12.837267036219036" class="ratio-high">12.84%</td>
+            <td data-sort="0.0667180079814351">$0.0667</td>
+            <td data-sort="1.58467094" style="color: #4ade80;">1.58%</td>
+            <td data-sort="12.751600140143902" style="color: #4ade80; font-weight: bold;">12.75%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/river/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">RIVER 🔗</a></td>
-            <td data-sort="22.262057302960926">$22.2621</td>
-            <td data-sort="20.54419999" style="color: #4ade80;">20.54%</td>
-            <td data-sort="12.99737027220878" class="ratio-high">13.00%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/dash/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">DASH 🔗</a></td>
-            <td data-sort="32.67560504991526">$32.6756</td>
-            <td data-sort="-2.15589522" style="color: #f87171;">-2.16%</td>
-            <td data-sort="16.576644836466556" class="ratio-high">16.58%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/artificial-superintelligence-alliance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FET 🔗</a></td>
-            <td data-sort="0.1817238887582831">$0.1817</td>
-            <td data-sort="-2.76383666" style="color: #f87171;">-2.76%</td>
-            <td data-sort="38.80990837227088" class="ratio-high">38.81%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/kite/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">KITE 🔗</a></td>
-            <td data-sort="0.22010826139980771">$0.2201</td>
-            <td data-sort="-7.6349007" style="color: #f87171;">-7.63%</td>
-            <td data-sort="49.08766189271072" class="ratio-high">49.09%</td>
+            <td data-sort="21.931994233590927">$21.9320</td>
+            <td data-sort="13.33676533" style="color: #4ade80;">13.34%</td>
+            <td data-sort="13.088338743201483" style="color: #4ade80; font-weight: bold;">13.09%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/chiliz/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">CHZ 🔗</a></td>
-            <td data-sort="0.038053984196570675">$0.0381</td>
-            <td data-sort="1.35933963" style="color: #4ade80;">1.36%</td>
-            <td data-sort="14.02187194011802" class="ratio-high">14.02%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/curve-dao-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">CRV 🔗</a></td>
-            <td data-sort="0.23141529626993165">$0.2314</td>
-            <td data-sort="-4.61895126" style="color: #f87171;">-4.62%</td>
-            <td data-sort="16.72072953675385" class="ratio-high">16.72%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/humanity-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">H 🔗</a></td>
-            <td data-sort="0.13251012018939184">$0.1325</td>
-            <td data-sort="-1.25600767" style="color: #f87171;">-1.26%</td>
-            <td data-sort="24.549805275433425" class="ratio-high">24.55%</td>
+            <td data-sort="0.03786220901186657">$0.0379</td>
+            <td data-sort="0.68675045" style="color: #4ade80;">0.69%</td>
+            <td data-sort="14.207779957214164" style="color: #4ade80; font-weight: bold;">14.21%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/celestia/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">TIA 🔗</a></td>
-            <td data-sort="0.3513761532019145">$0.3514</td>
-            <td data-sort="0.51087422" style="color: #4ade80;">0.51%</td>
-            <td data-sort="13.628437745994699" class="ratio-high">13.63%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/injective/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">INJ 🔗</a></td>
-            <td data-sort="3.0881328121403313">$3.0881</td>
-            <td data-sort="-0.52846056" style="color: #f87171;">-0.53%</td>
-            <td data-sort="17.928912786900327" class="ratio-high">17.93%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/floki-inu/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FLOKI 🔗</a></td>
-            <td data-sort="3.025762671847402e-05">$0.0000</td>
-            <td data-sort="-0.5494414" style="color: #f87171;">-0.55%</td>
-            <td data-sort="14.624880950509747" class="ratio-high">14.62%</td>
+            <td data-sort="0.3521310418913796">$0.3521</td>
+            <td data-sort="0.9493306" style="color: #4ade80;">0.95%</td>
+            <td data-sort="13.604649166309969" style="color: #4ade80; font-weight: bold;">13.60%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/story-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">IP 🔗</a></td>
-            <td data-sort="0.7991115522556409">$0.7991</td>
-            <td data-sort="0.24076445" style="color: #4ade80;">0.24%</td>
-            <td data-sort="15.589850010931833" class="ratio-high">15.59%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/venice-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">VVV 🔗</a></td>
-            <td data-sort="6.254202169291875">$6.2542</td>
-            <td data-sort="-1.53938001" style="color: #f87171;">-1.54%</td>
-            <td data-sort="12.810100493093692" class="ratio-high">12.81%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lighter/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LIT 🔗</a></td>
-            <td data-sort="1.1145742120515445">$1.1146</td>
-            <td data-sort="-7.27524969" style="color: #f87171;">-7.28%</td>
-            <td data-sort="11.84631724793116" class="ratio-high">11.85%</td>
+            <td data-sort="0.799722102994481">$0.7997</td>
+            <td data-sort="0.48660001" style="color: #4ade80;">0.49%</td>
+            <td data-sort="15.520791140824503" style="color: #4ade80; font-weight: bold;">15.52%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/optimism-ethereum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">OP 🔗</a></td>
-            <td data-sort="0.12469490271834545">$0.1247</td>
-            <td data-sort="0.95898726" style="color: #4ade80;">0.96%</td>
-            <td data-sort="30.33660295218157" class="ratio-high">30.34%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lido-dao/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LDO 🔗</a></td>
-            <td data-sort="0.29637879521286736">$0.2964</td>
-            <td data-sort="-3.21608468" style="color: #f87171;">-3.22%</td>
-            <td data-sort="18.0086954417168" class="ratio-high">18.01%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lombard/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BARD 🔗</a></td>
-            <td data-sort="1.1143114676877715">$1.1143</td>
-            <td data-sort="-3.66939532" style="color: #f87171;">-3.67%</td>
-            <td data-sort="12.357005991395345" class="ratio-high">12.36%</td>
+            <td data-sort="0.1252150607438322">$0.1252</td>
+            <td data-sort="1.62412493" style="color: #4ade80;">1.62%</td>
+            <td data-sort="30.172371937974106" style="color: #4ade80; font-weight: bold;">30.17%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/the-sandbox/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SAND 🔗</a></td>
-            <td data-sort="0.08432741652499642">$0.0843</td>
-            <td data-sort="0.19543813" style="color: #4ade80;">0.20%</td>
-            <td data-sort="12.936750990283965" class="ratio-high">12.94%</td>
+            <td data-sort="0.08462559766619199">$0.0846</td>
+            <td data-sort="0.74431235" style="color: #4ade80;">0.74%</td>
+            <td data-sort="12.852817976574894" style="color: #4ade80; font-weight: bold;">12.85%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/monad/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">MON 🔗</a></td>
-            <td data-sort="0.021888335241062474">$0.0219</td>
-            <td data-sort="-0.04596391" style="color: #f87171;">-0.05%</td>
-            <td data-sort="18.901421983092224" class="ratio-high">18.90%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/ethereum-name-service/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ENS 🔗</a></td>
-            <td data-sort="6.073643713976783">$6.0736</td>
-            <td data-sort="-1.81435504" style="color: #f87171;">-1.81%</td>
-            <td data-sort="10.040553661711508" class="ratio-high">10.04%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/the-graph/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">GRT 🔗</a></td>
-            <td data-sort="0.02697869822108111">$0.0270</td>
-            <td data-sort="-3.1793986" style="color: #f87171;">-3.18%</td>
-            <td data-sort="18.36487050027359" class="ratio-high">18.36%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/starknet-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">STRK 🔗</a></td>
-            <td data-sort="0.040613766474578074">$0.0406</td>
-            <td data-sort="-4.30426609" style="color: #f87171;">-4.30%</td>
-            <td data-sort="14.51558364951066" class="ratio-high">14.52%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pendle/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PENDLE 🔗</a></td>
-            <td data-sort="1.2695173172056289">$1.2695</td>
-            <td data-sort="-1.67008825" style="color: #f87171;">-1.67%</td>
-            <td data-sort="17.355488175603256" class="ratio-high">17.36%</td>
+            <td data-sort="0.021936347688123328">$0.0219</td>
+            <td data-sort="0.56319522" style="color: #4ade80;">0.56%</td>
+            <td data-sort="18.700675301064624" style="color: #4ade80; font-weight: bold;">18.70%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/axie-infinity/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">AXS 🔗</a></td>
-            <td data-sort="1.2251996492114703">$1.2252</td>
-            <td data-sort="5.18609369" style="color: #4ade80;">5.19%</td>
-            <td data-sort="18.742151683300285" class="ratio-high">18.74%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/plasma-xpl/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">XPL 🔗</a></td>
-            <td data-sort="0.1060736851152571">$0.1061</td>
-            <td data-sort="-1.36716858" style="color: #f87171;">-1.37%</td>
-            <td data-sort="54.289411289939906" class="ratio-high">54.29%</td>
+            <td data-sort="1.215743691450482">$1.2157</td>
+            <td data-sort="4.78094527" style="color: #4ade80;">4.78%</td>
+            <td data-sort="22.547243271733755" style="color: #4ade80; font-weight: bold;">22.55%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/compound/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">COMP 🔗</a></td>
-            <td data-sort="18.765037852740935">$18.7650</td>
-            <td data-sort="1.91882605" style="color: #4ade80;">1.92%</td>
-            <td data-sort="35.63604552227384" class="ratio-high">35.64%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/decentraland/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">MANA 🔗</a></td>
-            <td data-sort="0.09185352447001068">$0.0919</td>
-            <td data-sort="-1.35510031" style="color: #f87171;">-1.36%</td>
-            <td data-sort="11.339624333780533" class="ratio-high">11.34%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zksync/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZK 🔗</a></td>
-            <td data-sort="0.019021855819777826">$0.0190</td>
-            <td data-sort="-2.77112283" style="color: #f87171;">-2.77%</td>
-            <td data-sort="10.49730473632042" class="ratio-high">10.50%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/falcon-finance-ff/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FF 🔗</a></td>
-            <td data-sort="0.07355174115277337">$0.0736</td>
-            <td data-sort="-1.83287676" style="color: #f87171;">-1.83%</td>
-            <td data-sort="39.00988310391546" class="ratio-high">39.01%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/deepbook-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">DEEP 🔗</a></td>
-            <td data-sort="0.03446730955204726">$0.0345</td>
-            <td data-sort="-2.47038163" style="color: #f87171;">-2.47%</td>
-            <td data-sort="16.801566958143496" class="ratio-high">16.80%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/dogwifhat/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">WIF 🔗</a></td>
-            <td data-sort="0.16941097328801522">$0.1694</td>
-            <td data-sort="-1.36461746" style="color: #f87171;">-1.36%</td>
-            <td data-sort="53.680958497020306" class="ratio-high">53.68%</td>
+            <td data-sort="18.671822392296665">$18.6718</td>
+            <td data-sort="1.22189339" style="color: #4ade80;">1.22%</td>
+            <td data-sort="35.718720177922265" style="color: #4ade80; font-weight: bold;">35.72%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/gala/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">GALA 🔗</a></td>
-            <td data-sort="0.0035149419881700247">$0.0035</td>
-            <td data-sort="2.06511134" style="color: #4ade80;">2.07%</td>
-            <td data-sort="27.578084783290596" class="ratio-high">27.58%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/raydium/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">RAY 🔗</a></td>
-            <td data-sort="0.6118724895111324">$0.6119</td>
-            <td data-sort="-1.02151268" style="color: #f87171;">-1.02%</td>
-            <td data-sort="11.207427373147322" class="ratio-high">11.21%</td>
+            <td data-sort="0.0035350097156194326">$0.0035</td>
+            <td data-sort="2.44015407" style="color: #4ade80;">2.44%</td>
+            <td data-sort="27.195867765374025" style="color: #4ade80; font-weight: bold;">27.20%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/fartcoin/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FARTCOIN 🔗</a></td>
-            <td data-sort="0.16151623877638382">$0.1615</td>
-            <td data-sort="-0.51914811" style="color: #f87171;">-0.52%</td>
-            <td data-sort="23.86178380933044" class="ratio-high">23.86%</td>
+            <td data-sort="0.16175441348532135">$0.1618</td>
+            <td data-sort="0.07434466" style="color: #4ade80;">0.07%</td>
+            <td data-sort="23.68003266176318" style="color: #4ade80; font-weight: bold;">23.68%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/thorchain/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">RUNE 🔗</a></td>
-            <td data-sort="0.4531939843027361">$0.4532</td>
-            <td data-sort="2.19618965" style="color: #4ade80;">2.20%</td>
-            <td data-sort="16.211406616529086" class="ratio-high">16.21%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sentient/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SENT 🔗</a></td>
-            <td data-sort="0.021448427043954724">$0.0214</td>
-            <td data-sort="-3.39441354" style="color: #f87171;">-3.39%</td>
-            <td data-sort="16.039392179676934" class="ratio-high">16.04%</td>
+            <td data-sort="0.45467211083690107">$0.4547</td>
+            <td data-sort="2.65247619" style="color: #4ade80;">2.65%</td>
+            <td data-sort="16.20215779508614" style="color: #4ade80; font-weight: bold;">16.20%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/berachain/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BERA 🔗</a></td>
-            <td data-sort="0.6394186617664149">$0.6394</td>
-            <td data-sort="6.38828412" style="color: #4ade80;">6.39%</td>
-            <td data-sort="55.651158787707224" class="ratio-high">55.65%</td>
+            <td data-sort="0.642023230231353">$0.6420</td>
+            <td data-sort="7.11090434" style="color: #4ade80;">7.11%</td>
+            <td data-sort="55.722387370056914" style="color: #4ade80; font-weight: bold;">55.72%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/1inch/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">1INCH 🔗</a></td>
-            <td data-sort="0.09828810866379685">$0.0983</td>
-            <td data-sort="-0.15293563" style="color: #f87171;">-0.15%</td>
-            <td data-sort="11.205152365620776" class="ratio-high">11.21%</td>
+            <td data-sort="0.09837075985040084">$0.0984</td>
+            <td data-sort="0.26456064" style="color: #4ade80;">0.26%</td>
+            <td data-sort="11.154935158013284" style="color: #4ade80; font-weight: bold;">11.15%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/vaulta/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">A 🔗</a></td>
-            <td data-sort="0.07964777561707047">$0.0796</td>
-            <td data-sort="1.12930637" style="color: #4ade80;">1.13%</td>
-            <td data-sort="11.434789979891706" class="ratio-high">11.43%</td>
+            <td data-sort="0.07975313148071904">$0.0798</td>
+            <td data-sort="1.63734039" style="color: #4ade80;">1.64%</td>
+            <td data-sort="11.399787276116548" style="color: #4ade80; font-weight: bold;">11.40%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/melania-meme/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">MELANIA 🔗</a></td>
-            <td data-sort="0.1257510550391031">$0.1258</td>
-            <td data-sort="13.42986423" style="color: #4ade80;">13.43%</td>
-            <td data-sort="20.881549218598803" class="ratio-high">20.88%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zero-gravity/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">0G 🔗</a></td>
-            <td data-sort="0.5819505802827533">$0.5820</td>
-            <td data-sort="-1.40704926" style="color: #f87171;">-1.41%</td>
-            <td data-sort="15.023604987409463" class="ratio-high">15.02%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sonic/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">S 🔗</a></td>
-            <td data-sort="0.04237018703023782">$0.0424</td>
-            <td data-sort="-3.42017398" style="color: #f87171;">-3.42%</td>
-            <td data-sort="15.993905344560726" class="ratio-high">15.99%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/arweave/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">AR 🔗</a></td>
-            <td data-sort="1.8552682502970932">$1.8553</td>
-            <td data-sort="-1.02338838" style="color: #f87171;">-1.02%</td>
-            <td data-sort="28.689314488235873" class="ratio-high">28.69%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/eigencloud/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">EIGEN 🔗</a></td>
-            <td data-sort="0.18851502094429867">$0.1885</td>
-            <td data-sort="-2.04681513" style="color: #f87171;">-2.05%</td>
-            <td data-sort="16.070375473291403" class="ratio-high">16.07%</td>
+            <td data-sort="0.12753745048445292">$0.1275</td>
+            <td data-sort="14.06314815" style="color: #4ade80;">14.06%</td>
+            <td data-sort="20.730006530687444" style="color: #4ade80; font-weight: bold;">20.73%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/livepeer/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LPT 🔗</a></td>
-            <td data-sort="2.3008501309373557">$2.3009</td>
-            <td data-sort="1.30403457" style="color: #4ade80;">1.30%</td>
-            <td data-sort="11.61460943129961" class="ratio-high">11.61%</td>
+            <td data-sort="2.314310227767595">$2.3143</td>
+            <td data-sort="1.62245347" style="color: #4ade80;">1.62%</td>
+            <td data-sort="11.475059707443611" style="color: #4ade80; font-weight: bold;">11.48%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/aethir/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ATH 🔗</a></td>
-            <td data-sort="0.0059975080193596115">$0.0060</td>
-            <td data-sort="0.70105955" style="color: #4ade80;">0.70%</td>
-            <td data-sort="13.89189695283892" class="ratio-high">13.89%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/binaryx-new/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FORM 🔗</a></td>
-            <td data-sort="0.28542846920662335">$0.2854</td>
-            <td data-sort="-2.82973516" style="color: #f87171;">-2.83%</td>
-            <td data-sort="10.909978772010701" class="ratio-high">10.91%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/synthetix/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SNX 🔗</a></td>
-            <td data-sort="0.3130288360441214">$0.3130</td>
-            <td data-sort="-2.46634353" style="color: #f87171;">-2.47%</td>
-            <td data-sort="13.054081305640434" class="ratio-high">13.05%</td>
+            <td data-sort="0.006060326142878885">$0.0061</td>
+            <td data-sort="2.28675283" style="color: #4ade80;">2.29%</td>
+            <td data-sort="13.792363408145562" style="color: #4ade80; font-weight: bold;">13.79%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/horizen/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZEN 🔗</a></td>
-            <td data-sort="5.568979578501201">$5.5690</td>
-            <td data-sort="-0.02490681" style="color: #f87171;">-0.02%</td>
-            <td data-sort="13.09975913884378" class="ratio-high">13.10%</td>
+            <td data-sort="5.567833551191641">$5.5678</td>
+            <td data-sort="0.02385131" style="color: #4ade80;">0.02%</td>
+            <td data-sort="13.07348611650087" style="color: #4ade80; font-weight: bold;">13.07%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/audiera/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BEAT 🔗</a></td>
-            <td data-sort="0.42721522025241704">$0.4272</td>
-            <td data-sort="4.11183682" style="color: #4ade80;">4.11%</td>
-            <td data-sort="12.011427626650134" class="ratio-high">12.01%</td>
+            <td data-sort="0.42849064132514936">$0.4285</td>
+            <td data-sort="4.05670921" style="color: #4ade80;">4.06%</td>
+            <td data-sort="11.95690034130084" style="color: #4ade80; font-weight: bold;">11.96%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/qtum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">QTUM 🔗</a></td>
-            <td data-sort="0.9032756921009213">$0.9033</td>
-            <td data-sort="0.54127992" style="color: #4ade80;">0.54%</td>
-            <td data-sort="13.815524386071123" class="ratio-high">13.82%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/wormhole/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">W 🔗</a></td>
-            <td data-sort="0.017159175604505778">$0.0172</td>
-            <td data-sort="-7.30112716" style="color: #f87171;">-7.30%</td>
-            <td data-sort="24.620066497884473" class="ratio-high">24.62%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/oasis-network/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ROSE 🔗</a></td>
-            <td data-sort="0.012562331173662636">$0.0126</td>
-            <td data-sort="-0.92269754" style="color: #f87171;">-0.92%</td>
-            <td data-sort="10.320430087369443" class="ratio-high">10.32%</td>
+            <td data-sort="0.9052841773200033">$0.9053</td>
+            <td data-sort="0.72647129" style="color: #4ade80;">0.73%</td>
+            <td data-sort="13.790086281833847" style="color: #4ade80; font-weight: bold;">13.79%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/grass/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">GRASS 🔗</a></td>
-            <td data-sort="0.3865520888021551">$0.3866</td>
-            <td data-sort="5.77049172" style="color: #4ade80;">5.77%</td>
-            <td data-sort="18.306967034471942" class="ratio-high">18.31%</td>
-        </tr>
-        
-        <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/toshithecat/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">TOSHI 🔗</a></td>
-            <td data-sort="0.00021950581177585787">$0.0002</td>
-            <td data-sort="2.98702378" style="color: #4ade80;">2.99%</td>
-            <td data-sort="38.93531770325953" class="ratio-high">38.94%</td>
+            <td data-sort="0.38493513530652684">$0.3849</td>
+            <td data-sort="5.42891547" style="color: #4ade80;">5.43%</td>
+            <td data-sort="18.390284990077394" style="color: #4ade80; font-weight: bold;">18.39%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/myx-finance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">MYX 🔗</a></td>
-            <td data-sort="0.3268855994198519">$0.3269</td>
-            <td data-sort="3.44105748" style="color: #4ade80;">3.44%</td>
-            <td data-sort="13.678347621085734" class="ratio-high">13.68%</td>
+            <td data-sort="0.3314379230489154">$0.3314</td>
+            <td data-sort="4.83087141" style="color: #4ade80;">4.83%</td>
+            <td data-sort="13.672134741383937" style="color: #4ade80; font-weight: bold;">13.67%</td>
         </tr>
         
         <tr>
-            <td><a href="https://coinmarketcap.com/zh-tw/currencies/yearn-finance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">YFI 🔗</a></td>
-            <td data-sort="2559.0865625872366">$2559.0866</td>
-            <td data-sort="-0.32701448" style="color: #f87171;">-0.33%</td>
-            <td data-sort="36.901877066531874" class="ratio-high">36.90%</td>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/toshithecat/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">TOSHI 🔗</a></td>
+            <td data-sort="0.00022009199009581632">$0.0002</td>
+            <td data-sort="3.46122212" style="color: #4ade80;">3.46%</td>
+            <td data-sort="38.9173758413005" style="color: #4ade80; font-weight: bold;">38.92%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/0x/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZRX 🔗</a></td>
-            <td data-sort="0.10696428095663332">$0.1070</td>
-            <td data-sort="0.33032364" style="color: #4ade80;">0.33%</td>
-            <td data-sort="22.566600678347843" class="ratio-high">22.57%</td>
+            <td data-sort="0.10703270290717613">$0.1070</td>
+            <td data-sort="0.47625379" style="color: #4ade80;">0.48%</td>
+            <td data-sort="22.55821889327121" style="color: #4ade80; font-weight: bold;">22.56%</td>
         </tr>
         
         <tr>
             <td><a href="https://coinmarketcap.com/zh-tw/currencies/kamino-finance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">KMNO 🔗</a></td>
-            <td data-sort="0.021614053845691705">$0.0216</td>
-            <td data-sort="8.00349292" style="color: #4ade80;">8.00%</td>
-            <td data-sort="18.352210634397473" class="ratio-high">18.35%</td>
+            <td data-sort="0.021642901744535824">$0.0216</td>
+            <td data-sort="7.86042408" style="color: #4ade80;">7.86%</td>
+            <td data-sort="18.39640968878684" style="color: #4ade80; font-weight: bold;">18.40%</td>
+        </tr>
+        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-label label-outflow">📉 資金流出 (放量下跌 - 空頭預警)</div>
+        <div class="card overflow-hidden p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" id="outflowTable">
+                    <thead>
+                        <tr class="table-active">
+                            <th onclick="sortTable('outflowTable', 0)">代號 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 1)">價格 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 2)">24h 漲跌 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 3)">Vol/Mkt Cap ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/ethereum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ETH 🔗</a></td>
+            <td data-sort="2102.13290606673">$2102.1329</td>
+            <td data-sort="-0.31469929" style="color: #f87171;">-0.31%</td>
+            <td data-sort="10.097683085846084" style="color: #4ade80; font-weight: bold;">10.10%</td>
         </tr>
         
-                </tbody>
-            </table>
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/chainlink/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LINK 🔗</a></td>
+            <td data-sort="9.121930269668205">$9.1219</td>
+            <td data-sort="-1.05212852" style="color: #f87171;">-1.05%</td>
+            <td data-sort="12.170723916279128" style="color: #4ade80; font-weight: bold;">12.17%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sui/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SUI 🔗</a></td>
+            <td data-sort="0.9984080850918514">$0.9984</td>
+            <td data-sort="-1.83233625" style="color: #f87171;">-1.83%</td>
+            <td data-sort="17.52424850828169" style="color: #4ade80; font-weight: bold;">17.52%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zcash/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZEC 🔗</a></td>
+            <td data-sort="210.72338202392166">$210.7234</td>
+            <td data-sort="-0.77103085" style="color: #f87171;">-0.77%</td>
+            <td data-sort="10.748045643690487" style="color: #4ade80; font-weight: bold;">10.75%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/aave/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">AAVE 🔗</a></td>
+            <td data-sort="112.8533108352829">$112.8533</td>
+            <td data-sort="-1.5854524" style="color: #f87171;">-1.59%</td>
+            <td data-sort="25.853386048470604" style="color: #4ade80; font-weight: bold;">25.85%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/near-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">NEAR 🔗</a></td>
+            <td data-sort="1.3345904888603408">$1.3346</td>
+            <td data-sort="-3.23363883" style="color: #f87171;">-3.23%</td>
+            <td data-sort="15.745120261297158" style="color: #4ade80; font-weight: bold;">15.75%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pepe/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PEPE 🔗</a></td>
+            <td data-sort="3.4073123768785625e-06">$0.0000</td>
+            <td data-sort="-0.63083558" style="color: #f87171;">-0.63%</td>
+            <td data-sort="36.50319373876189" style="color: #4ade80; font-weight: bold;">36.50%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/worldcoin-org/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">WLD 🔗</a></td>
+            <td data-sort="0.35996846006718886">$0.3600</td>
+            <td data-sort="-1.61696334" style="color: #f87171;">-1.62%</td>
+            <td data-sort="13.999051538468304" style="color: #4ade80; font-weight: bold;">14.00%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/ethena/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ENA 🔗</a></td>
+            <td data-sort="0.10923053885330529">$0.1092</td>
+            <td data-sort="-1.38109606" style="color: #f87171;">-1.38%</td>
+            <td data-sort="12.678118436302555" style="color: #4ade80; font-weight: bold;">12.68%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/midnight-network/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">NIGHT 🔗</a></td>
+            <td data-sort="0.049689523557536024">$0.0497</td>
+            <td data-sort="-3.83825238" style="color: #f87171;">-3.84%</td>
+            <td data-sort="21.705243372863443" style="color: #4ade80; font-weight: bold;">21.71%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/aptos/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">APT 🔗</a></td>
+            <td data-sort="0.9311349599818707">$0.9311</td>
+            <td data-sort="-0.88410747" style="color: #f87171;">-0.88%</td>
+            <td data-sort="14.795894583377144" style="color: #4ade80; font-weight: bold;">14.80%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/filecoin/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FIL 🔗</a></td>
+            <td data-sort="0.8785414120646167">$0.8785</td>
+            <td data-sort="-1.24695021" style="color: #f87171;">-1.25%</td>
+            <td data-sort="16.366358798977252" style="color: #4ade80; font-weight: bold;">16.37%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pump-fun/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PUMP 🔗</a></td>
+            <td data-sort="0.0020053735177001128">$0.0020</td>
+            <td data-sort="-7.51480085" style="color: #f87171;">-7.51%</td>
+            <td data-sort="18.37408013165269" style="color: #4ade80; font-weight: bold;">18.37%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/arbitrum/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ARB 🔗</a></td>
+            <td data-sort="0.10290609339895569">$0.1029</td>
+            <td data-sort="-0.38749979" style="color: #f87171;">-0.39%</td>
+            <td data-sort="13.903771826496131" style="color: #4ade80; font-weight: bold;">13.90%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/bonk1/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BONK 🔗</a></td>
+            <td data-sort="6.190181726627458e-06">$0.0000</td>
+            <td data-sort="-0.38332602" style="color: #f87171;">-0.38%</td>
+            <td data-sort="17.680748625223565" style="color: #4ade80; font-weight: bold;">17.68%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/virtual-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">VIRTUAL 🔗</a></td>
+            <td data-sort="0.7300709876806977">$0.7301</td>
+            <td data-sort="-1.76181429" style="color: #f87171;">-1.76%</td>
+            <td data-sort="23.361453646256187" style="color: #4ade80; font-weight: bold;">23.36%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/dash/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">DASH 🔗</a></td>
+            <td data-sort="32.82924565738268">$32.8292</td>
+            <td data-sort="-1.8164644" style="color: #f87171;">-1.82%</td>
+            <td data-sort="16.486257437234315" style="color: #4ade80; font-weight: bold;">16.49%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/artificial-superintelligence-alliance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FET 🔗</a></td>
+            <td data-sort="0.18267791722628016">$0.1827</td>
+            <td data-sort="-1.36950382" style="color: #f87171;">-1.37%</td>
+            <td data-sort="38.41572093617735" style="color: #4ade80; font-weight: bold;">38.42%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/kite/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">KITE 🔗</a></td>
+            <td data-sort="0.2199334925808683">$0.2199</td>
+            <td data-sort="-7.92355429" style="color: #f87171;">-7.92%</td>
+            <td data-sort="49.40067615765029" style="color: #4ade80; font-weight: bold;">49.40%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/curve-dao-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">CRV 🔗</a></td>
+            <td data-sort="0.23269768942915664">$0.2327</td>
+            <td data-sort="-3.80692534" style="color: #f87171;">-3.81%</td>
+            <td data-sort="16.74975024667787" style="color: #4ade80; font-weight: bold;">16.75%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/humanity-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">H 🔗</a></td>
+            <td data-sort="0.1326338620818194">$0.1326</td>
+            <td data-sort="-1.16246644" style="color: #f87171;">-1.16%</td>
+            <td data-sort="25.15512396121395" style="color: #4ade80; font-weight: bold;">25.16%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/injective/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">INJ 🔗</a></td>
+            <td data-sort="3.0924450598548607">$3.0924</td>
+            <td data-sort="-0.29026652" style="color: #f87171;">-0.29%</td>
+            <td data-sort="17.94961946879762" style="color: #4ade80; font-weight: bold;">17.95%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/floki-inu/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FLOKI 🔗</a></td>
+            <td data-sort="3.0193549473467777e-05">$0.0000</td>
+            <td data-sort="-0.3324803" style="color: #f87171;">-0.33%</td>
+            <td data-sort="14.671557035725694" style="color: #4ade80; font-weight: bold;">14.67%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lighter/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LIT 🔗</a></td>
+            <td data-sort="1.119600580711679">$1.1196</td>
+            <td data-sort="-6.63032381" style="color: #f87171;">-6.63%</td>
+            <td data-sort="11.771284937271338" style="color: #4ade80; font-weight: bold;">11.77%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/venice-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">VVV 🔗</a></td>
+            <td data-sort="6.221911982318309">$6.2219</td>
+            <td data-sort="-3.50980863" style="color: #f87171;">-3.51%</td>
+            <td data-sort="12.802223953031767" style="color: #4ade80; font-weight: bold;">12.80%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lido-dao/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LDO 🔗</a></td>
+            <td data-sort="0.2965457065787702">$0.2965</td>
+            <td data-sort="-3.01286" style="color: #f87171;">-3.01%</td>
+            <td data-sort="18.039201223844465" style="color: #4ade80; font-weight: bold;">18.04%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/lombard/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">BARD 🔗</a></td>
+            <td data-sort="1.1115122438830911">$1.1115</td>
+            <td data-sort="-3.83839167" style="color: #f87171;">-3.84%</td>
+            <td data-sort="12.275084030467955" style="color: #4ade80; font-weight: bold;">12.28%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/the-graph/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">GRT 🔗</a></td>
+            <td data-sort="0.02696093301440578">$0.0270</td>
+            <td data-sort="-3.59545386" style="color: #f87171;">-3.60%</td>
+            <td data-sort="18.1996546679155" style="color: #4ade80; font-weight: bold;">18.20%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/starknet-token/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">STRK 🔗</a></td>
+            <td data-sort="0.04064084165252994">$0.0406</td>
+            <td data-sort="-4.00690013" style="color: #f87171;">-4.01%</td>
+            <td data-sort="14.531575714035611" style="color: #4ade80; font-weight: bold;">14.53%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/pendle/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">PENDLE 🔗</a></td>
+            <td data-sort="1.2688872247534104">$1.2689</td>
+            <td data-sort="-1.67480167" style="color: #f87171;">-1.67%</td>
+            <td data-sort="17.08138704031117" style="color: #4ade80; font-weight: bold;">17.08%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/plasma-xpl/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">XPL 🔗</a></td>
+            <td data-sort="0.10607378563685407">$0.1061</td>
+            <td data-sort="-1.92074399" style="color: #f87171;">-1.92%</td>
+            <td data-sort="54.136823348745324" style="color: #4ade80; font-weight: bold;">54.14%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/decentraland/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">MANA 🔗</a></td>
+            <td data-sort="0.09222576905730748">$0.0922</td>
+            <td data-sort="-0.79405624" style="color: #f87171;">-0.79%</td>
+            <td data-sort="11.303595000092931" style="color: #4ade80; font-weight: bold;">11.30%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zksync/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ZK 🔗</a></td>
+            <td data-sort="0.019023948443719543">$0.0190</td>
+            <td data-sort="-2.31504299" style="color: #f87171;">-2.32%</td>
+            <td data-sort="10.455614256719976" style="color: #4ade80; font-weight: bold;">10.46%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/falcon-finance-ff/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FF 🔗</a></td>
+            <td data-sort="0.07356980046396937">$0.0736</td>
+            <td data-sort="-1.79131973" style="color: #f87171;">-1.79%</td>
+            <td data-sort="39.021159912328415" style="color: #4ade80; font-weight: bold;">39.02%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/deepbook-protocol/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">DEEP 🔗</a></td>
+            <td data-sort="0.03457686263655568">$0.0346</td>
+            <td data-sort="-3.5395936" style="color: #f87171;">-3.54%</td>
+            <td data-sort="16.428883823245286" style="color: #4ade80; font-weight: bold;">16.43%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/dogwifhat/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">WIF 🔗</a></td>
+            <td data-sort="0.16875279533766954">$0.1688</td>
+            <td data-sort="-1.47036099" style="color: #f87171;">-1.47%</td>
+            <td data-sort="53.82757529441709" style="color: #4ade80; font-weight: bold;">53.83%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/raydium/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">RAY 🔗</a></td>
+            <td data-sort="0.6132589378463491">$0.6133</td>
+            <td data-sort="-0.37098708" style="color: #f87171;">-0.37%</td>
+            <td data-sort="11.15317693029426" style="color: #4ade80; font-weight: bold;">11.15%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sentient/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SENT 🔗</a></td>
+            <td data-sort="0.021421302130958303">$0.0214</td>
+            <td data-sort="-3.40056601" style="color: #f87171;">-3.40%</td>
+            <td data-sort="16.001764759447223" style="color: #4ade80; font-weight: bold;">16.00%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/zero-gravity/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">0G 🔗</a></td>
+            <td data-sort="0.5858179342257365">$0.5858</td>
+            <td data-sort="-0.69241875" style="color: #f87171;">-0.69%</td>
+            <td data-sort="15.106860314226378" style="color: #4ade80; font-weight: bold;">15.11%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/sonic/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">S 🔗</a></td>
+            <td data-sort="0.042499377918352156">$0.0425</td>
+            <td data-sort="-3.02135939" style="color: #f87171;">-3.02%</td>
+            <td data-sort="15.997853783455215" style="color: #4ade80; font-weight: bold;">16.00%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/eigencloud/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">EIGEN 🔗</a></td>
+            <td data-sort="0.18835440922431843">$0.1884</td>
+            <td data-sort="-2.11188509" style="color: #f87171;">-2.11%</td>
+            <td data-sort="16.004617875197013" style="color: #4ade80; font-weight: bold;">16.00%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/arweave/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">AR 🔗</a></td>
+            <td data-sort="1.8488616773011268">$1.8489</td>
+            <td data-sort="-1.39374469" style="color: #f87171;">-1.39%</td>
+            <td data-sort="28.793974541255942" style="color: #4ade80; font-weight: bold;">28.79%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/binaryx-new/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">FORM 🔗</a></td>
+            <td data-sort="0.2852900142039414">$0.2853</td>
+            <td data-sort="-2.04325006" style="color: #f87171;">-2.04%</td>
+            <td data-sort="10.771811543155726" style="color: #4ade80; font-weight: bold;">10.77%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/synthetix/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">SNX 🔗</a></td>
+            <td data-sort="0.31337299081448466">$0.3134</td>
+            <td data-sort="-2.70583325" style="color: #f87171;">-2.71%</td>
+            <td data-sort="12.915143284357509" style="color: #4ade80; font-weight: bold;">12.92%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/wormhole/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">W 🔗</a></td>
+            <td data-sort="0.017239893712360208">$0.0172</td>
+            <td data-sort="-6.8402824" style="color: #f87171;">-6.84%</td>
+            <td data-sort="24.59735553353055" style="color: #4ade80; font-weight: bold;">24.60%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/oasis-network/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">ROSE 🔗</a></td>
+            <td data-sort="0.012534222084890653">$0.0125</td>
+            <td data-sort="-0.85656691" style="color: #f87171;">-0.86%</td>
+            <td data-sort="10.354698750361317" style="color: #4ade80; font-weight: bold;">10.35%</td>
+        </tr>
+        
+        <tr>
+            <td><a href="https://coinmarketcap.com/zh-tw/currencies/yearn-finance/" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">YFI 🔗</a></td>
+            <td data-sort="2564.875553867198">$2564.8756</td>
+            <td data-sort="-0.05910074" style="color: #f87171;">-0.06%</td>
+            <td data-sort="36.820279708631894" style="color: #4ade80; font-weight: bold;">36.82%</td>
+        </tr>
+        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-    function sortTable(n) {
+    function sortTable(tableId, n) {
         var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-        table = document.getElementById("coinTable");
+        table = document.getElementById(tableId);
         switching = true;
         dir = "desc"; 
         while (switching) {
@@ -634,35 +640,25 @@
                 shouldSwitch = false;
                 x = rows[i].getElementsByTagName("TD")[n];
                 y = rows[i + 1].getElementsByTagName("TD")[n];
-                
                 var xVal = x.getAttribute("data-sort") || x.innerText.toLowerCase();
                 var yVal = y.getAttribute("data-sort") || y.innerText.toLowerCase();
-                
                 if (!isNaN(parseFloat(xVal)) && !isNaN(parseFloat(yVal))) {
-                    xVal = parseFloat(xVal);
-                    yVal = parseFloat(yVal);
+                    xVal = parseFloat(xVal); yVal = parseFloat(yVal);
                 }
-
-                if (dir == "asc") {
-                    if (xVal > yVal) { shouldSwitch = true; break; }
-                } else if (dir == "desc") {
-                    if (xVal < yVal) { shouldSwitch = true; break; }
-                }
+                if (dir == "asc") { if (xVal > yVal) { shouldSwitch = true; break; } }
+                else if (dir == "desc") { if (xVal < yVal) { shouldSwitch = true; break; } }
             }
             if (shouldSwitch) {
                 rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                 switching = true;
                 switchcount ++;      
             } else {
-                if (switchcount == 0 && dir == "desc") {
-                    dir = "asc";
-                    switching = true;
-                }
+                if (switchcount == 0 && dir == "desc") { dir = "asc"; switching = true; }
             }
         }
     }
-    // 預設以 Vol/Mkt Cap (第3欄) 降序排列
-    window.onload = function() { sortTable(3); };
+    // 初始排序
+    window.onload = function() { sortTable('inflowTable', 3); sortTable('outflowTable', 3); };
     </script>
 </body>
 </html>
