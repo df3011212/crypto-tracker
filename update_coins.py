@@ -39,92 +39,108 @@ def get_data():
         print(f"抓取錯誤: {e}")
         return pd.DataFrame()
 
+# 執行抓取
 df = get_data()
+
+# 區分流入與流出
+df_inflow = df[df['漲跌'] >= 0] if not df.empty else pd.DataFrame()
+df_outflow = df[df['漲跌'] < 0] if not df.empty else pd.DataFrame()
+
+# 設定台灣時間
 tw_tz = pytz.timezone('Asia/Taipei')
 current_time = datetime.now(tw_tz).strftime("%Y-%m-%d %H:%M:%S")
 
-# 生成 TXT
-if not df.empty:
-    df[['代號', '比例']].to_csv('hot_symbols.txt', index=False, sep='\t')
-else:
-    with open("hot_symbols.txt", "w") as f: f.write("目前無符合標準的幣種")
-
-# 生成 HTML 表格行
-rows_html = ""
-if not df.empty:
-    for _, row in df.iterrows():
+def generate_rows(target_df):
+    if target_df.empty:
+        return "<tr><td colspan='4' class='text-center text-secondary'>目前無符合條件之幣種</td></tr>"
+    html = ""
+    for _, row in target_df.iterrows():
         cmc_url = f"https://coinmarketcap.com/zh-tw/currencies/{row['網址名']}/"
-        rows_html += f"""
+        change_color = "#4ade80" if row['漲跌'] >= 0 else "#f87171"
+        html += f"""
         <tr>
             <td><a href="{cmc_url}" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">{row['代號']} 🔗</a></td>
             <td data-sort="{row['價格']}">${row['價格']:.4f}</td>
-            <td data-sort="{row['漲跌']}" style="color: {'#4ade80' if row['漲跌'] >= 0 else '#f87171'};">{row['漲跌']:.2f}%</td>
-            <td data-sort="{row['比例']}" class="ratio-high">{row['比例']:.2f}%</td>
+            <td data-sort="{row['漲跌']}" style="color: {change_color};">{row['漲跌']:.2f}%</td>
+            <td data-sort="{row['比例']}" style="color: #4ade80; font-weight: bold;">{row['比例']:.2f}%</td>
         </tr>
         """
-else:
-    rows_html = "<tr><td colspan='4' class='text-center'>目前無符合標準之幣種</td></tr>"
+    return html
 
+# 生成 HTML 模板
 html_template = f"""
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoinMarketCap 放量偵測器</title>
+    <title>CoinMarketCap 多空動向偵測器</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body {{ background-color: #0f172a; color: #f8fafc; padding: 20px; font-family: sans-serif; }}
-        .container {{ max-width: 900px; }}
-        .card {{ background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 20px; }}
-        .table {{ color: #e2e8f0; background: #1e293b; }}
-        .ratio-high {{ color: #4ade80; font-weight: bold; }}
-        th {{ cursor: pointer; color: #38bdf8 !important; }}
-        th:hover {{ text-decoration: underline; }}
+        .container {{ max-width: 1000px; }}
+        .card {{ background-color: #1e293b; border: none; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }}
         .header-title {{ color: #38bdf8; font-weight: 800; }}
-        .badge-update {{ background-color: #334155; color: #94a3b8; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; }}
+        .badge-update {{ background-color: #334155; color: #94a3b8; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; }}
+        th {{ cursor: pointer; color: #38bdf8 !important; text-align: center; }}
+        td {{ text-align: center; vertical-align: middle; border-bottom: 1px solid #334155 !important; }}
+        .table {{ margin-bottom: 0; }}
+        .section-label {{ font-size: 1.25rem; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 5px solid #38bdf8; }}
+        .label-inflow {{ border-left-color: #4ade80; color: #4ade80; }}
+        .label-outflow {{ border-left-color: #f87171; color: #f87171; }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="text-center mb-4">
-            <h1 class="header-title">📊 CoinMarketCap 放量偵測器</h1>
+            <h1 class="header-title">📊 CMC 多空資金動向偵測</h1>
             <span class="badge-update">🕒 最後更新 (台灣)：{current_time}</span>
         </div>
 
-        <div class="card">
-            <h5 class="text-info">📌 偵測與排序規則</h5>
-            <div style="font-size: 0.95rem; color: #cbd5e1;">
-                <ul>
-                    <li><strong>更新頻率：</strong> 每 30 分鐘更新。</li>
-                    <li><strong>排序功能：</strong> 點擊下方表格<strong>藍色標題</strong>即可切換排序方式。</li>
-                    <li><strong>放量標準：</strong> Vol/Mkt Cap ≧ 10%。</li>
-                </ul>
-            </div>
-            <a href="hot_symbols.txt" download class="btn btn-info w-100 mt-2" style="font-weight:bold;">📥 下載代號清單 (TXT)</a>
+        <div class="card p-3" style="font-size: 0.9rem;">
+            <p class="mb-1">💡 <strong>偵測規則：</strong> 篩選 CMC 前 200 名，Vol/Mkt Cap ≧ 10% 之幣種。</p>
+            <p class="mb-0">🟢 <strong>流入：</strong> 放量且價格上漲。 🔴 <strong>流出：</strong> 放量且價格下跌。</p>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-dark table-hover" id="coinTable">
-                <thead>
-                    <tr class="table-active">
-                        <th onclick="sortTable(0)">代號 ⇅</th>
-                        <th onclick="sortTable(1)">價格 ⇅</th>
-                        <th onclick="sortTable(2)">24h 漲跌 ⇅</th>
-                        <th onclick="sortTable(3)">Vol/Mkt Cap ⇅</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows_html}
-                </tbody>
-            </table>
+        <div class="section-label label-inflow">🚀 資金流入 (放量上漲 - 多頭預警)</div>
+        <div class="card overflow-hidden p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" id="inflowTable">
+                    <thead>
+                        <tr class="table-active">
+                            <th onclick="sortTable('inflowTable', 0)">代號 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 1)">價格 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 2)">24h 漲跌 ⇅</th>
+                            <th onclick="sortTable('inflowTable', 3)">Vol/Mkt Cap ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody>{generate_rows(df_inflow)}</tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-label label-outflow">📉 資金流出 (放量下跌 - 空頭預警)</div>
+        <div class="card overflow-hidden p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" id="outflowTable">
+                    <thead>
+                        <tr class="table-active">
+                            <th onclick="sortTable('outflowTable', 0)">代號 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 1)">價格 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 2)">24h 漲跌 ⇅</th>
+                            <th onclick="sortTable('outflowTable', 3)">Vol/Mkt Cap ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody>{generate_rows(df_outflow)}</tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-    function sortTable(n) {{
+    function sortTable(tableId, n) {{
         var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-        table = document.getElementById("coinTable");
+        table = document.getElementById(tableId);
         switching = true;
         dir = "desc"; 
         while (switching) {{
@@ -134,35 +150,25 @@ html_template = f"""
                 shouldSwitch = false;
                 x = rows[i].getElementsByTagName("TD")[n];
                 y = rows[i + 1].getElementsByTagName("TD")[n];
-                
                 var xVal = x.getAttribute("data-sort") || x.innerText.toLowerCase();
                 var yVal = y.getAttribute("data-sort") || y.innerText.toLowerCase();
-                
                 if (!isNaN(parseFloat(xVal)) && !isNaN(parseFloat(yVal))) {{
-                    xVal = parseFloat(xVal);
-                    yVal = parseFloat(yVal);
+                    xVal = parseFloat(xVal); yVal = parseFloat(yVal);
                 }}
-
-                if (dir == "asc") {{
-                    if (xVal > yVal) {{ shouldSwitch = true; break; }}
-                }} else if (dir == "desc") {{
-                    if (xVal < yVal) {{ shouldSwitch = true; break; }}
-                }}
+                if (dir == "asc") {{ if (xVal > yVal) {{ shouldSwitch = true; break; }} }}
+                else if (dir == "desc") {{ if (xVal < yVal) {{ shouldSwitch = true; break; }} }}
             }}
             if (shouldSwitch) {{
                 rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                 switching = true;
                 switchcount ++;      
             }} else {{
-                if (switchcount == 0 && dir == "desc") {{
-                    dir = "asc";
-                    switching = true;
-                }}
+                if (switchcount == 0 && dir == "desc") {{ dir = "asc"; switching = true; }}
             }}
         }}
     }}
-    // 預設以 Vol/Mkt Cap (第3欄) 降序排列
-    window.onload = function() {{ sortTable(3); }};
+    // 初始排序
+    window.onload = function() {{ sortTable('inflowTable', 3); sortTable('outflowTable', 3); }};
     </script>
 </body>
 </html>
