@@ -2,8 +2,8 @@ name: Update Coin List
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # 改為每 15 分鐘執行一次，增加自動觸發機率
-  workflow_dispatch:      # 保留手動執行按鈕
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,24 +12,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
       - name: Install dependencies
         run: pip install requests pandas pytz
-        
       - name: Run scraper
         run: python update_coins.py
-        
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html hot_symbols.txt
-          git commit -m "Adjust schedule to 15 mins" || exit 0
+          git add index.html
+          git commit -m "Update inflow/outflow data" || exit 0
           git push
